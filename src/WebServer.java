@@ -1,13 +1,11 @@
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class WebServer {
+public class WebServer
+{
 
-	public static void main(String[] args) throws Throwable {
+	public static void main(String[] args) throws Exception
+	{
 		// Server-side initializations
 		int port = 6789;
 		ServerSocket listenSocket = new ServerSocket(port);
@@ -16,15 +14,24 @@ public class WebServer {
 		while (true)
 		{
 			// Wait for client request
-			Socket connSocket = listenSocket.accept();
+			Socket socket = listenSocket.accept();
 
-			// Read client data
-			InputStreamReader clientStream = new InputStreamReader(connSocket.getInputStream());
-			BufferedReader clientBuffer = new BufferedReader(clientStream);
+			// Construct an object to process the HTTP request message
+			HttpRequest request = new HttpRequest(socket);
 
-			// Respond client
-			DataOutputStream serverStream = new DataOutputStream(connSocket.getOutputStream());
+			// Create a new thread to process the request
+			Thread thread = new Thread(request);
+
+			// Start the thread
+			thread.start();
+
+			// // Read client data
+			// InputStreamReader clientStream = new InputStreamReader(connSocket.getInputStream());
+			// BufferedReader clientBuffer = new BufferedReader(clientStream);
+
+			// // Respond client
+			// DataOutputStream serverStream = new DataOutputStream(connSocket.getOutputStream());
 		}
 	}
-	
+
 }

@@ -24,13 +24,6 @@ public class WebServer
 
 			// Start the thread
 			thread.start();
-
-			// // Read client data
-			// InputStreamReader clientStream = new InputStreamReader(connSocket.getInputStream());
-			// BufferedReader clientBuffer = new BufferedReader(clientStream);
-
-			// // Respond client
-			// DataOutputStream serverStream = new DataOutputStream(connSocket.getOutputStream());
 		}
 	}
 

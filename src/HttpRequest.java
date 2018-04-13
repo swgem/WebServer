@@ -12,6 +12,7 @@ public class HttpRequest implements Runnable
 	static String CRLF = "\r\n";
 	static String StatusCodeOK = " 200 OK";
 	static String StatusCodeNotFound = " 404 Not Found";
+	
 	private Socket socket;
 
 	public HttpRequest(Socket socket) throws Exception
@@ -45,11 +46,11 @@ public class HttpRequest implements Runnable
 		String requestLine = br.readLine();
 		
 		// Get the header lines
-		String headerLines = requestLine;
+		String headerLines = requestLine + CRLF;
 		String line;
 		while ((line = br.readLine()).length() != 0)
 		{
-			headerLines += line;
+			headerLines += line + CRLF;
 		}
 
 		// Print the header lines
@@ -58,14 +59,13 @@ public class HttpRequest implements Runnable
 		// Extract the filename from the request line
 		StringTokenizer tokens = new StringTokenizer(requestLine);
 		tokens.nextToken(); // skip over the method, which should be "GET"
-		String filename = "." + tokens.nextToken(); // period indicates it's
-													// in current directory
+		String filename = "./res" + tokens.nextToken(); // search in res folder
 
 		// Extract the HTTP version from the request line
 		String httpVersion = tokens.nextToken();
 
 		// Send the response message
-		respondClient(httpVersion, filename);		
+		respondClient(httpVersion, filename, os);		
 		
 		// Close streams and socket
 		os.close();
@@ -82,13 +82,13 @@ public class HttpRequest implements Runnable
 		System.out.println();
 	}
 
-	private void respondClient(String httpVersion, String filename)
+	private void respondClient(String httpVersion, String filename, DataOutputStream os) throws Exception 
 	{
 		String statusLine = null;
 		String contentTypeLine = null;
 		String entityBody = null;
 
-		// Retrieve file from directory if it exisists
+		// Retrieve file from directory if it exists
 		FileInputStream fis = retrieveFile(filename);
 		
 		// Construct the response message
@@ -163,6 +163,10 @@ public class HttpRequest implements Runnable
 		if (filename.endsWith(".htm") || filename.endsWith(".html"))
 		{
 			contentType = "text/html";
+		}
+		else if (filename.endsWith(".txt"))
+		{
+			contentType = "text/plain";
 		}
 		else if (filename.endsWith(".gif"))
 		{

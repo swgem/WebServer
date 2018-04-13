@@ -44,50 +44,58 @@ public class HttpRequest implements Runnable
 		// Get the request line of the HTTP request message
 		String requestLine = br.readLine();
 		
-		// Display the request line
-		System.out.println(requestLine);
-		
-		// Get and display the header lines
-		String headerLine = null;
-		while ((headerLine = br.readLine()).length() != 0)
+		// Get the header lines
+		String headerLines = requestLine;
+		String line;
+		while ((line = br.readLine()).length() != 0)
 		{
-			System.out.println(headerLine);
+			headerLines += line;
 		}
-		
-		// Additional line to command window
-		System.out.println();
+
+		// Print the header lines
+		printHeader(headerLines);
 
 		// Extract the filename from the request line
 		StringTokenizer tokens = new StringTokenizer(requestLine);
 		tokens.nextToken(); // skip over the method, which should be "GET"
-		String fileName = tokens.nextToken();
-
-		// Prepend a "." so that file request is within the current directory.
-		fileName = "." + fileName;
-
-		// Open the requested file.
-		FileInputStream fis = null;
-		boolean fileExists = true;
-		try
-		{
-			fis = new FileInputStream(fileName);
-		}
-		catch (FileNotFoundException e)
-		{
-			fileExists = false;
-		}
+		String filename = "." + tokens.nextToken(); // period indicates it's
+													// in current directory
 
 		// Extract the HTTP version from the request line
 		String httpVersion = tokens.nextToken();
 
-		// Construct the response message.
+		// Send the response message
+		respondClient(httpVersion, filename);		
+		
+		// Close streams and socket
+		os.close();
+		br.close();
+		socket.close();
+	}
+
+	private void printHeader(String headerLines)
+	{
+		// Additional line to command window
+		System.out.println(headerLines);
+
+		// Additional line to command window
+		System.out.println();
+	}
+
+	private void respondClient(String httpVersion, String filename)
+	{
 		String statusLine = null;
 		String contentTypeLine = null;
 		String entityBody = null;
-		if (fileExists)
+
+		// Retrieve file from directory if it exisists
+		FileInputStream fis = retrieveFile(filename);
+		
+		// Construct the response message
+		if (fis != null)
 		{
 			statusLine = httpVersion + StatusCodeOK + CRLF;
-			contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
+			contentTypeLine = "Content-type: " + contentType(filename) + CRLF;
 		}
 		else
 		{
@@ -108,7 +116,7 @@ public class HttpRequest implements Runnable
 		os.writeBytes(CRLF);
 
 		// Send the entity body.
-		if (fileExists)
+		if (fis != null)
 		{
 			sendBytes(fis, os);
 			fis.close();
@@ -117,11 +125,22 @@ public class HttpRequest implements Runnable
 		{
 			os.writeBytes(entityBody);
 		}
-		
-		// Close streams and socket
-		os.close();
-		br.close();
-		socket.close();
+	}
+
+	private FileInputStream retrieveFile(String filename)
+	{
+		// Open the requested file.
+		FileInputStream fis;
+		try
+		{
+			fis = new FileInputStream(filename);
+		}
+		catch (FileNotFoundException e)
+		{
+			fis = null;
+		}
+
+		return fis;
 	}
 
 	private void sendBytes(FileInputStream fis, DataOutputStream os) throws Exception
@@ -137,19 +156,19 @@ public class HttpRequest implements Runnable
 		}		
 	}
 
-	private String contentType(String fileName)
+	private String contentType(String filename)
 	{
 		String contentType;
 
-		if (fileName.endsWith(".htm") || fileName.endsWith(".html"))
+		if (filename.endsWith(".htm") || filename.endsWith(".html"))
 		{
 			contentType = "text/html";
 		}
-		else if (fileName.endsWith(".gif"))
+		else if (filename.endsWith(".gif"))
 		{
 			contentType = "image/gif";
 		}
-		else if (fileName.endsWith(".jpg"))
+		else if (filename.endsWith(".jpg"))
 		{
 			contentType = "image/jpeg";
 		}

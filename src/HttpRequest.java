@@ -9,6 +9,7 @@ import java.util.StringTokenizer;
 
 public class HttpRequest implements Runnable
 {
+	
 	static String CRLF = "\r\n";
 	static String StatusCodeOK = " 200 OK";
 	static String StatusCodeNotFound = " 404 Not Found";
@@ -53,8 +54,8 @@ public class HttpRequest implements Runnable
 			headerLines += line + CRLF;
 		}
 
-		// Print the header lines
-		printHeader(headerLines);
+		// Print the client request
+		printRequest(headerLines);
 
 		// Extract the filename from the request line
 		StringTokenizer tokens = new StringTokenizer(requestLine);
@@ -73,37 +74,38 @@ public class HttpRequest implements Runnable
 		socket.close();
 	}
 
-	private void printHeader(String headerLines)
+	private void printRequest(String headerLines)
 	{
-		// Additional line to command window
+		// Print request lines to command window
 		System.out.println(headerLines);
 
 		// Additional line to command window
 		System.out.println();
 	}
 
-	private void respondClient(String httpVersion, String filename, DataOutputStream os) throws Exception 
+	private void respondClient(String httpVersion,
+							   String filename,
+							   DataOutputStream os) throws Exception 
 	{
 		String statusLine = null;
 		String contentTypeLine = null;
-		String entityBody = null;
 
 		// Retrieve file from directory if it exists
 		FileInputStream fis = retrieveFile(filename);
 		
-		// Construct the response message
+		// Construct the response header message
 		if (fis != null)
 		{
+			// Set up header with OK code
 			statusLine = httpVersion + StatusCodeOK + CRLF;
 			contentTypeLine = "Content-type: " + contentType(filename) + CRLF;
 		}
 		else
 		{
+			// Set up header with Not Found code
 			statusLine = httpVersion + StatusCodeNotFound + CRLF;
 			contentTypeLine = "Content-type: text/html" + CRLF;
-			entityBody = "<HTML>" + 
-						 "<HEAD><TITLE>Not Found</TITLE></HEAD>" +
-						 "<BODY>Not Found</BODY></HTML>";
+			
 		}
 
 		// Send the status line.
@@ -123,6 +125,9 @@ public class HttpRequest implements Runnable
 		}
 		else
 		{
+			String entityBody = "<HTML>" + 
+								"<HEAD><TITLE>Not Found</TITLE></HEAD>" +
+								"<BODY>Not Found</BODY></HTML>";
 			os.writeBytes(entityBody);
 		}
 	}
@@ -183,5 +188,5 @@ public class HttpRequest implements Runnable
 
 		return contentType;
 	}
-	
+
 }
